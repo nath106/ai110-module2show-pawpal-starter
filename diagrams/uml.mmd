@@ -1,15 +1,53 @@
 classDiagram
-    %% Replace the placeholders below with your actual classes, attributes, methods, and relationships.
-    %% Keep this file updated so it matches your final implementation.
-
-    class ClassName {
-        +type attribute
-        +method() returnType
+    class Owner {
+        +String name
+        +String email
+        +List~Pet~ pets
+        +List~String~ busyBlocks
+        +addPet(pet Pet) void
+        +addBusyBlock(start String, end String) void
+        +getAvailableSlots() List~String~
     }
 
-    class AnotherClass {
-        +type attribute
-        +method() returnType
+    class Pet {
+        +String name
+        +String species
+        +String breed
+        +int age
+        +List~PetCareTask~ tasks
+        +addTask(task PetCareTask) void
+        +getTasks() List~PetCareTask~
     }
 
-    ClassName --> AnotherClass : relationship
+    class PetCareTask {
+        +String taskName
+        +int durationMinutes
+        +String priority
+        +Constraint constraint
+        +setConstraint(c Constraint) void
+        +getDuration() int
+    }
+
+    class Constraint {
+        +String type
+        +String fixedTime
+        +String preferredWindow
+        +bool isRecurring
+        +isTimeSatisfied(time String) bool
+        +describe() String
+    }
+
+    class DailyPlan {
+        +String date
+        +List~PetCareTask~ scheduledTasks
+        +String reasoning
+        +generate(pet Pet, owner Owner) void
+        +editTask(task PetCareTask, newTime String) void
+        +display() String
+    }
+
+    Owner "1" --> "*" Pet : owns
+    Pet "1" --> "*" PetCareTask : has
+    PetCareTask "1" --> "0..1" Constraint : governed by
+    DailyPlan --> Owner : uses schedule of
+    DailyPlan --> Pet : schedules for
