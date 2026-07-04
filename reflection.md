@@ -3,51 +3,44 @@
 ## 1. System Design
 
 **a. Initial design**
-1. Add pet profile
-    - Attributes
-     - Pet Care Tasks
-     - Time length of each task
-    - Methods
-        - Add a pet
-        - Add a task
-        - 
-2. Add owner profile
-    - Attributes
-        - Owners schedule and constraints
-    - Methods
-        - Add time constraints
-3. Create Daily schedule 
-    - Attributes
-        - Time constrained pet task
-        - Owners time constrains
-    - Methods
-        - Edit daily plan
-        - Edit length of task
+    Owner and Pet Information
+    - Take in basic owner and pet info
 
-Owner and Pet Information
-- Take in basic owner and pet info
+    Pet Care Task
+    - Be able to add pet care tasks
+    - Hold the information of each task
+    Constraints
+    - Task priority/constraints such as meds being at a certain time everyday or grooming appointments
+    - Owner has preference for when certain task should be done such as only wanting walks in the morning
+    - Owner can time block parts of day when they are busy with other tasks.
 
-Pet Care Task
-- Be able to add pet care tasks
-- Hold the information of each task
-
-Constraints
-- Task priority/constraints such as meds being at a certain time everyday or grooming appointments
-- Owner has preference for when certain task should be done such as only wanting walks in the morning
-- Owner can time block parts of day when they are busy with other tasks.
-
-Daily Plan
-- Produced a clean plan based on constraints and priorities
-- Explain reasoning behind plan
-- Be able to edit plan (MAYBE)
+    Daily Plan
+    - Produced a clean plan based on constraints and priorities
+    - Explain reasoning behind plan
+    - Be able to edit plan (MAYBE)
 
 - Briefly describe your initial UML design.
+
 - What classes did you include, and what responsibilities did you assign to each?
+    The classes I included were DailyPlan, Owner, Pet, PetCareTask, and Constraints.
+    Class: DailyPlan
+    Responsibilites: Generate plan, edit plan, and display plan.
+    Class: Owner
+    Responsibilites: Add a pet, add a busy block, and get available slots.
+    Class: Pet
+    Responsibilites: Add and get tasks.
+    Class: Pet Care Task
+    Responsibilites: set constraints and get duration.
+    Class: Constraint
+    Responsibilites: Determine if its timed satisfied and a description of the constraint.
 
 **b. Design changes**
 
-- Did your design change during implementation?
+- Did your design change during implementation? Yes
 - If yes, describe at least one change and why you made it.
+    The change I made was to add the Constraint class. I did this because it will allow the user to reuse the same constraint objects across multiple tasks. For example, if medication needs to be done during feeding, then the fixed time can be used in making the scheduling logic in daily plan easier to query cleanly.
+
+
 
 ---
 
