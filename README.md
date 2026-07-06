@@ -22,6 +22,22 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## Features
+
+### Scheduling Engine
+- **Priority-aware scheduling** — fixed-time tasks are placed first; remaining tasks are sorted high → medium → low priority before being assigned slots (`DailyPlan.generate`)
+- **Three constraint types** — `fixed` (exact time; conflict logged if blocked), `preferred` (morning / afternoon / evening window with fallback to any free slot), `flexible` (placed sequentially from 07:00)
+- **Greedy free-slot search** — scans occupied intervals in sorted order and jumps the cursor to the end of each blocking block; returns exact-minute slots, not rounded increments (`DailyPlan._find_next_free`)
+- **Owner busy-block exclusion** — owner's unavailable ranges seed the occupied list before any task is scheduled; free gaps are computed with a linear sweep (`Owner.get_available_slots`)
+
+### Conflict Detection
+- **Within-plan overlap detection** — half-open interval math (`a_start < b_end AND b_start < a_end`) catches tasks that collide inside a single pet's plan (`DailyPlan.get_overlapping_tasks`)
+- **Cross-pet conflict detection** — flattens tasks from multiple pets' plans, skips same-plan pairs (already caught above), and surfaces owner-level time collisions (`detect_conflicts`)
+
+### Recurring Tasks & Multi-day Planning
+- **Recurrence system** — marking a task complete returns a copy with `due_date` advanced by 1 day (daily) or 7 days (weekly) via `timedelta` (`PetCareTask.mark_complete`)
+- **7-day schedule generation** — day 0 schedules all tasks; days 1–6 replay only recurring tasks on a fresh pet copy to avoid state mutation (`generate_week`)
+
 ## Getting started
 
 ### Setup
@@ -73,7 +89,7 @@ Owner free slots today:
 
 ```bash
 # Run the full test suite:
-pytest
+python -m pytest
 
 # Run with coverage:
 pytest --cov
@@ -82,7 +98,16 @@ pytest --cov
 Sample test output:
 
 ```
-# Paste your pytest output here
+================================================== test session starts ==================================================
+platform darwin -- Python 3.14.5, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/nath/Documents/ai110-module2show-pawpal-starter
+plugins: anyio-4.14.1
+collected 5 items                                                                                                       
+
+tests/test_pawpal.py .....                                                                                        [100%]
+
+=================================================== 5 passed in 0.01s ===================================================
+
 ```
 
 ## 📐 Smarter Scheduling
@@ -91,19 +116,21 @@ Sample test output:
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | DailyPlan.get_task_sorted() sorts in chronological order  |
-| Filtering | | DailyPlan.filter_task filters by priority or completion status |
-| Conflict handling | | When generating a plan, if there is a conflict between, the higher priority task will be scheduled first and the next task will be scheduled at the next avaliable time.|
-| Recurring tasks | | Recurring task can be shown daily |
+| Task sorting | DailyPlan.get_task_sorted() | sorts in chronological order |
+| Filtering | DailyPlan.filter_task() | filters by priority or completion status |
+| Conflict handling | DailyPlan.get_overlapping_tasks() | When generating a plan, if there is a conflict between, the higher priority task will be scheduled first and the next task will be scheduled at the next avaliable time.|
+| Recurring tasks | Pet.get_recurring_task()| Recurring task are scheduled daily at the same time|
 
 ## 📸 Demo Walkthrough
 
 Describe your app in numbered steps so a reader can follow along without watching a video:
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+1. Create an owner profile by entering name and email.
+2. Block off time where no task can be done.
+3. Add a pet by entering the pets names, species, breed, and age.
+4. Select active pet to add tasks.
+5. Add a task by entering task information such as name, time duration, priority, and constraint.
+6. After all tasks are added, generate an interactive daily schedule that includes filtering task and marking once completed
+7. Generate a view of a 7-day schedule.
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->

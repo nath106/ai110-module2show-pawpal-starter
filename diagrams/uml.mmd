@@ -6,6 +6,7 @@ classDiagram
         +List~String~ busyBlocks
         +addPet(pet Pet) void
         +addBusyBlock(start String, end String) void
+        +getPet(name String) Pet
         +getAvailableSlots() List~String~
     }
 
@@ -17,6 +18,8 @@ classDiagram
         +List~PetCareTask~ tasks
         +addTask(task PetCareTask) void
         +getTasks() List~PetCareTask~
+        +getRecurringTasks() List~PetCareTask~
+        +removeTask(taskName String) bool
     }
 
     class PetCareTask {
@@ -24,8 +27,12 @@ classDiagram
         +int durationMinutes
         +String priority
         +Constraint constraint
+        +String scheduledTime
+        +String dueDate
+        +bool completed
         +setConstraint(c Constraint) void
         +getDuration() int
+        +markComplete(today String) PetCareTask
     }
 
     class Constraint {
@@ -33,17 +40,29 @@ classDiagram
         +String fixedTime
         +String preferredWindow
         +bool isRecurring
+        +String recurrence
         +isTimeSatisfied(time String) bool
         +describe() String
     }
 
     class DailyPlan {
         +String date
+        +String petName
         +List~PetCareTask~ scheduledTasks
+        +List~String~ conflicts
         +String reasoning
         +generate(pet Pet, owner Owner) void
         +editTask(task PetCareTask, newTime String) void
+        +getTasksSorted() List~PetCareTask~
+        +filterTasks(completed bool, priority String) List~PetCareTask~
+        +getOverlappingTasks() List~String~
         +display() String
+    }
+
+    class Scheduling {
+        <<module>>
+        +generateWeek(pet Pet, owner Owner, startDate String, days int) List~DailyPlan~
+        +detectConflicts(plans List~DailyPlan~) List~String~
     }
 
     Owner "1" --> "*" Pet : owns
@@ -51,3 +70,6 @@ classDiagram
     PetCareTask "1" --> "0..1" Constraint : governed by
     DailyPlan --> Owner : uses schedule of
     DailyPlan --> Pet : schedules for
+    Scheduling ..> DailyPlan : creates / reads
+    Scheduling ..> Pet : reads
+    Scheduling ..> Owner : reads
