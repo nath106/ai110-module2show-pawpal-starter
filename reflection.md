@@ -54,7 +54,9 @@
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+    One tradeoff this scheduler makes is prioritizing time-efficiency rather than the overall apperence of the schedule. Before, the _find_next_free would advance by 15 minutes on every overlap. Now, if a busy block ends at 2:23, then the task could be scheduled at 2:23. 
 - Why is that tradeoff reasonable for this scenario?
+    This tradeoff is reasonable because it gives the user the ability to create a structured and detailed schedule. If the user know they get home at a certain time, then they can immedietly do the task that is needed. The busy blocks are designed to block out any time the user knows they can't do a certain task, so the times that are avalible for the schedular should be times that the user knows they will be able to do the task.
 
 ---
 
@@ -63,7 +65,9 @@
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+    I used AI tools mostly for debugging and refactoring. For design brainstorming, I did it by myself and then got input from the AI tool to see what other classes I could add. I also used AI to help me with streamlit, since I'm not very familiar with it.
 - What kinds of prompts or questions were most helpful?
+    The most helpful promts where the ones where I asked it to explain concepts or asking for help when I got stuck. 
 
 **b. Judgment and verification**
 

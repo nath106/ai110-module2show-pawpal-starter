@@ -91,10 +91,10 @@ Sample test output:
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | | DailyPlan.get_task_sorted() sorts in chronological order  |
+| Filtering | | DailyPlan.filter_task filters by priority or completion status |
+| Conflict handling | | When generating a plan, if there is a conflict between, the higher priority task will be scheduled first and the next task will be scheduled at the next avaliable time.|
+| Recurring tasks | | Recurring task can be shown daily |
 
 ## 📸 Demo Walkthrough
 
