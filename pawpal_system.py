@@ -138,6 +138,12 @@ class Pet:
             if t.constraint and (t.constraint.is_recurring or t.constraint.recurrence)
         ]
 
+    def remove_task(self, task_name: str) -> bool:
+        """Remove the first task matching task_name. Returns True if a task was removed."""
+        original = len(self.tasks)
+        self.tasks = [t for t in self.tasks if t.task_name != task_name]
+        return len(self.tasks) < original
+
 
 # ---------------------------------------------------------------------------
 # Owner

@@ -1,6 +1,6 @@
 import datetime
 import streamlit as st
-from pawpal_system import Pet, PetCareTask, Constraint, Owner, DailyPlan, generate_week
+from pawpal_system import Pet, PetCareTask, Constraint, Owner, DailyPlan, generate_week, detect_conflicts
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 st.title("🐾 PawPal+")
@@ -13,6 +13,9 @@ if "owner" not in st.session_state:
 
 if "active_pet" not in st.session_state:
     st.session_state.active_pet = None
+
+if "pet_plans" not in st.session_state:
+    st.session_state.pet_plans = {}  # pet_name -> DailyPlan
 
 # ---------------------------------------------------------------------------
 # Section 1: Owner profile
@@ -107,31 +110,30 @@ if not active_pet:
 else:
     st.caption(f"Adding tasks for **{active_pet.name}**")
 
-    with st.form("task_form"):
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            task_title = st.text_input("Task name", value="Morning walk")
-        with col2:
-            duration = st.number_input("Duration (min)", min_value=1, max_value=240, value=30)
-        with col3:
-            priority = st.selectbox("Priority", ["high", "medium", "low"])
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        task_title = st.text_input("Task name", value="Morning walk")
+    with col2:
+        duration = st.number_input("Duration (min)", min_value=1, max_value=240, value=30)
+    with col3:
+        priority = st.selectbox("Priority", ["high", "medium", "low"])
 
-        constraint_type = st.selectbox(
-            "Constraint type", ["flexible", "fixed", "preferred"]
+    constraint_type = st.selectbox(
+        "Constraint type", ["flexible", "fixed", "preferred"]
+    )
+    fixed_time       = ""
+    preferred_window = ""
+
+    if constraint_type == "fixed":
+        fixed_time = st.text_input("Fixed time (HH:MM)", value="08:00")
+    elif constraint_type == "preferred":
+        preferred_window = st.selectbox(
+            "Preferred window", ["morning", "afternoon", "evening"]
         )
-        fixed_time       = ""
-        preferred_window = ""
-        is_recurring     = False
 
-        if constraint_type == "fixed":
-            fixed_time   = st.text_input("Fixed time (HH:MM)", value="08:00")
-            is_recurring = st.checkbox("Recurring daily")
-        elif constraint_type == "preferred":
-            preferred_window = st.selectbox(
-                "Preferred window", ["morning", "afternoon", "evening"]
-            )
+    recurrence = st.selectbox("Recurrence", ["none", "daily", "weekly"])
 
-        task_saved = st.form_submit_button("Add Task")
+    task_saved = st.button("Add Task")
 
     if task_saved:
         # Build Constraint only when the type isn't flexible
@@ -141,7 +143,8 @@ else:
                 type=constraint_type,
                 fixed_time=fixed_time,
                 preferred_window=preferred_window,
-                is_recurring=is_recurring,
+                is_recurring=recurrence != "none",
+                recurrence=recurrence if recurrence != "none" else "",
             )
 
         new_task = PetCareTask(
@@ -166,6 +169,16 @@ else:
             }
             for t in tasks
         ])
+
+        to_remove = st.selectbox(
+            "Select task to remove", [t.task_name for t in tasks], key="remove_sel"
+        )
+        if st.button("Remove selected task"):
+            if active_pet.remove_task(to_remove):
+                st.success(f"Removed '{to_remove}'")
+                st.rerun()
+            else:
+                st.error("Task not found.")
     else:
         st.info("No tasks yet — add one above.")
 
@@ -189,14 +202,16 @@ else:
 
     if gen_single:
         today = datetime.date.today().isoformat()
-        plan  = DailyPlan(date=today)
+        plan  = DailyPlan(date=today, pet_name=active_pet.name)
         plan.generate(pet=active_pet, owner=owner)
         st.session_state["last_plan"] = plan
+        st.session_state["pet_plans"][active_pet.name] = plan
 
     if gen_week:
         today = datetime.date.today().isoformat()
         plans = generate_week(pet=active_pet, owner=owner, start_date=today, days=7)
         st.session_state["last_plan"] = plans[0]
+        st.session_state["pet_plans"][active_pet.name] = plans[0]
         st.success("7-day recurring plan generated!")
         for p in plans:
             with st.expander(p.date):
@@ -210,6 +225,15 @@ else:
                 st.warning(f"Scheduling conflict: {msg}")
         else:
             st.success("Schedule generated — no conflicts.")
+
+        # --- cross-pet conflict detection ---
+        all_plans = list(st.session_state["pet_plans"].values())
+        if len(all_plans) > 1:
+            cross_warnings = detect_conflicts(all_plans)
+            if cross_warnings:
+                st.write("**Cross-pet conflicts:**")
+                for w in cross_warnings:
+                    st.warning(w)
 
         # --- filter controls ---
         st.write("**Filter tasks:**")
@@ -245,6 +269,25 @@ else:
             ])
         else:
             st.info("No tasks match the current filter.")
+
+        # --- mark complete ---
+        incomplete = [t for t in plan.get_tasks_sorted() if not t.completed]
+        if incomplete:
+            to_complete = st.selectbox(
+                "Mark task as done", [t.task_name for t in incomplete], key="complete_sel"
+            )
+            if st.button("Mark Done"):
+                today_str = datetime.date.today().isoformat()
+                task_obj = next(t for t in incomplete if t.task_name == to_complete)
+                next_task = task_obj.mark_complete(today_str)
+                if next_task:
+                    active_pet.add_task(next_task)
+                    st.success(
+                        f"'{to_complete}' marked done — next occurrence added for {next_task.due_date}."
+                    )
+                else:
+                    st.success(f"'{to_complete}' marked done.")
+                st.rerun()
 
         with st.expander("Full schedule text"):
             st.text(plan.display())
